@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<!-- default header name is X-CSRF-TOKEN -->
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+
+<a href="/mylogout">logout</a>
+<a href="/hello">hello</a>
+
+
+<form action="/mylogout" method="post">
+		<input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+		<input type="submit" value="logout">
+	</form>
+
+<form method="post" action="/do">
+		<sec:csrfInput />
+		Name:<br />
+		<input type="text" name="name" />
+		<input type="submit" value="submit"/>
+	</form>
+	
+	
+<form method="post" action="/do">
+		Name:<br />
+		<input type="text" name="name" />
+		<input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+		<input type="submit" value="submit"/>
+	</form>
+	
+	<button onclick="fun()">click </button>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+<script>
+
+var token = $("meta[name='_csrf']").attr("content");
+var header = $("meta[name='_csrf_header']").attr("content");
+$(document).ajaxSend(function(e, xhr, options) {
+    xhr.setRequestHeader(header, token);
+});
+//alert(token);
+//alert(header);
+function fun(){
+	
+	
+        $.ajax({
+          type: 'POST',
+          url: '/do'
+        }).done(function (data, textStatus, jqXHR) {
+          
+          var csrfToken = jqXHR.getResponseHeader('X-CSRF-TOKEN');
+          
+          if (csrfToken) {
+            var cookie = JSON.parse($.cookie('helloween'));
+            cookie.csrf = csrfToken;
+            $.cookie('helloween', JSON.stringify(cookie));
+            alert(cookie);
+          }
+          $('#helloweenMessage').html(data.message);
+          alert('hjhhh');
+          if (jqXHR.status === 403) {
+        	  alert('sdf');
+        	  
+          }
+          
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+          if (jqXHR.status === 401) { // HTTP Status 401: Unauthorized
+            alert("sdf");              var cookie = JSON.stringify({method: 'GET', url: '/', csrf: jqXHR.getResponseHeader('X-CSRF-TOKEN')});
+            $.cookie('helloween', cookie);
+            window.location = '/login.jsp';
+          } else {
+            console.error('Houston, we have a problem...');
+          }
+        });
+}
+</script>
+
+</body>
+</html>
